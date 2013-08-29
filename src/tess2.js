@@ -1,10 +1,20 @@
-
+"use strict";
 
 var assert = function(cond) {
 	if (!cond) {
 		throw "Assertion Failed!";
 	}
 }
+
+var WINDING_ODD = 0;
+var WINDING_NONZERO = 1;
+var WINDING_POSITIVE = 2;
+var WINDING_NEGATIVE = 3;
+var WINDING_ABS_GEQ_TWO = 4;
+
+var POLYGONS = 0;
+var CONNECTED_POLYGONS = 1;
+var BOUNDARY_CONTOURS = 2;
 
 
 /* The mesh structure is similar in spirit, notation, and operations
@@ -268,7 +278,7 @@ TESSmesh.prototype = {
 		/* Insert in circular doubly-linked list before eNext.
 		* Note that the prev pointer is stored in Sym->next.
 		*/
-		ePrev = eNext.Sym.next;
+		var ePrev = eNext.Sym.next;
 		eSym.next = ePrev;
 		ePrev.Sym.next = e;
 		e.next = eNext;
@@ -278,7 +288,7 @@ TESSmesh.prototype = {
 		e.Onext = e;
 		e.Lnext = eSym;
 		e.Org = null;
-		e.Lface = nul;
+		e.Lface = null;
 		e.winding = 0;
 		e.activeRegion = null;
 
@@ -798,9 +808,9 @@ TESSmesh.prototype = {
 				assert( e.Onext.Sym.Lnext === e );
 				assert( e.Lface === f );
 				e = e.Lnext;
-			} while( e !== fanEdge );
+			} while( e !== f.anEdge );
 		}
-		assert( fprev === fPrev && f.anEdge === null );
+		assert( f.prev === fPrev && f.anEdge === null );
 
 		vPrev = vHead;
 		for( vPrev = vHead ; (v = vPrev.next) !== vHead; vPrev = v) {
@@ -1096,7 +1106,7 @@ Dict.prototype = {
 	},
 
 	insert: function(k) {
-		this.insertBefore(this.head, k);
+		return this.insertBefore(this.head, k);
 	},
 
 	search: function(key) {
@@ -1184,7 +1194,7 @@ PriorityQ.prototype = {
 			assert(child <= this.max);
 
 			hChild = n[child].handle;
-			if( child > pq.size || this.leq( h[hCurr].key, h[hChild].key )) {
+			if( child > this.size || this.leq( h[hCurr].key, h[hChild].key )) {
 				n[curr].handle = hCurr;
 				h[hCurr].node = curr;
 				break;
@@ -1490,6 +1500,7 @@ Sweep.topLeftRegion = function( tess, reg ) {
 Sweep.topRightRegion = function( reg )
 {
 	var dst = reg.eUp.Dst;
+	var reg = null;
 	/* Find the region above the uppermost edge with the same destination */
 	do {
 		reg = Sweep.regionAbove( reg );
@@ -1520,15 +1531,15 @@ Sweep.addRegionBelow = function( tess, regAbove, eNewUp ) {
 //static int IsWindingInside( TESStesselator *tess, int n )
 Sweep.isWindingInside = function( tess, n ) {
 	switch( tess.windingRule ) {
-		case Tess2.WINDING_ODD:
+		case WINDING_ODD:
 			return (n & 1) != 0;
-		case Tess2.WINDING_NONZERO:
+		case WINDING_NONZERO:
 			return (n != 0);
-		case Tess2.WINDING_POSITIVE:
+		case WINDING_POSITIVE:
 			return (n > 0);
-		case Tess2.WINDING_NEGATIVE:
+		case WINDING_NEGATIVE:
 			return (n < 0);
-		case Tess2.WINDING_ABS_GEQ_TWO:
+		case WINDING_ABS_GEQ_TWO:
 			return (n >= 2) || (n <= -2);
 	}
 	assert( false );
@@ -1575,7 +1586,7 @@ Sweep.finishLeftRegions = function( tess, regFirst, regLast ) {
 	* same as in the dictionary.
 	*/
 	var e, ePrev;
-
+	var reg = null;
 	var regPrev = regFirst;
 	var ePrev = regFirst.eUp;
 	while( regPrev !== regLast ) {
@@ -2331,7 +2342,7 @@ Sweep.sweepEvent = function( tess, vEvent ) {
 		/* No right-going edges -- add a temporary "fixable" edge */
 		Sweep.connectRightVertex( tess, regUp, eBottomLeft );
 	} else {
-		Swep.addRightEdges( tess, regUp, eBottomLeft.Onext, eTopLeft, eTopLeft, true );
+		Sweep.addRightEdges( tess, regUp, eBottomLeft.Onext, eTopLeft, eTopLeft, true );
 	}
 };
 
@@ -2373,7 +2384,7 @@ Sweep.initEdgeDict = function( tess ) {
 	* We maintain an ordering of edge intersections with the sweep line.
 	* This order is maintained in a dynamic dictionary.
 	*/
-	tess.dict = new Dict( tess, Swep.edgeLeq );
+	tess.dict = new Dict( tess, Sweep.edgeLeq );
 //	if (tess->dict == NULL) longjmp(tess->env,1);
 
 	var w = (tess.bmax[0] - tess.bmin[0]);
@@ -2394,7 +2405,7 @@ Sweep.doneEdgeDict = function( tess )
 	var reg;
 	var fixedEdges = 0;
 
-	while( (reg = tess.dict.min()) !== null ) {
+	while( (reg = tess.dict.min().key) !== null ) {
 		/*
 		* At the end of all processing, the dictionary should contain
 		* only the two sentinel edges, plus at most one "fixable" edge
@@ -2468,10 +2479,12 @@ Sweep.initPriorityQ = function( tess ) {
 //		if (v.pqHandle == INV_HANDLE)
 //			break;
 	}
-	if (v !== vHead || !pq.init() ) {
-		tess.pq = null;
+
+	if (v !== vHead) {
 		return false;
 	}
+
+	pq.init();
 
 	return true;
 }
@@ -2589,7 +2602,7 @@ function Tesselator() {
 	this.bmax = [0.0, 0.0];
 
 	/*** state needed for the line sweep ***/
-	this.windingRule = Tess2.WINDING_ODD;	/* rule for determining polygon interior */
+	this.windingRule = WINDING_ODD;	/* rule for determining polygon interior */
 
 	this.dict = null;		/* edge dictionary for sweep line */
 	this.pq = null;		/* priority queue of vertex events */
@@ -2752,7 +2765,7 @@ Tesselator.prototype = {
 	/* Determine the polygon normal and project vertices onto the plane
 	* of the polygon.
 	*/
-	projectPolygon: function() {
+	projectPolygon_: function() {
 		var v, vHead = this.mesh.vHead;
 		var norm = [0,0,0];
 		var sUnit, tUnit;
@@ -2767,7 +2780,7 @@ Tesselator.prototype = {
 		}
 		sUnit = tess.sUnit;
 		tUnit = tess.tUnit;
-		i = This.longAxis_( norm );
+		i = this.longAxis_( norm );
 
 /*	#if defined(FOR_TRITE_TEST_PROGRAM) || defined(TRUE_PROJECT)
 		// Choose the initial sUnit vector to be approximately perpendicular
@@ -3045,7 +3058,7 @@ Tesselator.prototype = {
 		}
 
 		tess.elementCount = maxFaceCount;
-		if (elementType == Tess2.CONNECTED_POLYGONS)
+		if (elementType == CONNECTED_POLYGONS)
 			maxFaceCount *= 2;
 /*		tess.elements = (TESSindex*)tess->alloc.memalloc( tess->alloc.userData,
 														  sizeof(TESSindex) * maxFaceCount * polySize );
@@ -3066,7 +3079,7 @@ Tesselator.prototype = {
 			return;
 		}*/
 		this.vertices = [];
-		this.vertices.length = vertexCount * vertexSize;
+		this.vertices.length = maxVertexCount * vertexSize;
 
 /*		tess->vertexIndices = (TESSindex*)tess->alloc.memalloc( tess->alloc.userData,
 															    sizeof(TESSindex) * tess->vertexCount );
@@ -3076,7 +3089,7 @@ Tesselator.prototype = {
 			return;
 		}*/
 		this.vertexIndices = [];
-		this.vertexIndices.length = vertexCount;
+		this.vertexIndices.length = maxVertexCount;
 
 		
 		// Output vertices.
@@ -3117,7 +3130,7 @@ Tesselator.prototype = {
 				this.elements[nel++] = -1;
 
 			// Store polygon connectivity
-			if ( elementType == Tess2.CONNECTED_POLYGONS )
+			if ( elementType == CONNECTED_POLYGONS )
 			{
 				edge = f.anEdge;
 				do
@@ -3228,7 +3241,7 @@ Tesselator.prototype = {
 		var i;
 
 		if ( this.mesh === null )
-		  	this.mesh = new Mesh();
+		  	this.mesh = new TESSmesh();
 /*	 	if ( tess->mesh == NULL ) {
 			tess->outOfMemory = 1;
 			return;
@@ -3324,13 +3337,13 @@ Tesselator.prototype = {
 		*/
 		Sweep.computeInterior( this );
 
-		mesh = this.mesh;
+		var mesh = this.mesh;
 
 		/* If the user wants only the boundary contours, we throw away all edges
 		* except those which separate the interior from the exterior.
 		* Otherwise we tessellate all the regions marked "inside".
 		*/
-		if (elementType == Tess2.BOUNDARY_CONTOURS) {
+		if (elementType == BOUNDARY_CONTOURS) {
 			this.setWindingNumber_( mesh, 1, true );
 		} else {
 			this.tessellateInterior_( mesh ); 
@@ -3339,7 +3352,7 @@ Tesselator.prototype = {
 
 		mesh.check();
 
-		if (elementType == Tess2.BOUNDARY_CONTOURS) {
+		if (elementType == BOUNDARY_CONTOURS) {
 			this.outputContours_( mesh, vertexSize );     /* output contours */
 		}
 		else
