@@ -1,8 +1,9 @@
+// Example based on poly2tri.js demo code.
+
 "use strict";
 
 var contours = [];
 var bounds = [10000000,10000000,-10000000,-10000000];
-var triangles = [];
 var offset = [0, 0];
 var scale = 1.0;
 var tess = null;
@@ -15,7 +16,7 @@ function clearData() {
 	scale = 1.0;
 	contours = [];
 	bounds = [10000000,10000000,-10000000,-10000000];
-	triangles = [];
+	tess = null;
 }
 
 function parsePoints(str) {
@@ -63,22 +64,19 @@ function triangulate() {
 
 	contours = [];
 	bounds = [10000000,10000000,-10000000,-10000000];
-	triangles = [];
-
-	// parse contour
-/*	contour = parsePoints($("textarea#poly_contour").val());
-	polygonBounds(contour, bounds);
-	$("#contour_size").text(contour.length/2);*/
 
 	// parse holes
+	var npts = 0;
 	$("textarea#poly_contours").val().split(/\n\s*\n/).forEach(function(val) {
 		var cont = parsePoints(val);
 		if (cont.length > 0) {
 			polygonBounds(cont, bounds);
 			contours.push(cont);
+			npts += cont.length/2;
 		}
 	});
 	$("#contours_size").text(contours.length);
+	$("#contours_points").text(npts);
 
 	var $canvas = $('#canvas');
 	var ctx = $canvas[0].getContext('2d');
@@ -88,29 +86,21 @@ function triangulate() {
 	var yscale = (ctx.canvas.height * 0.8) / (bounds[3] - bounds[1]);
 	scale = Math.min(xscale, yscale);
 
-//	try {
-		// prepare SweepContext
-/*        swctx = new poly2tri.SweepContext(contour, {cloneArrays: true});
-		holes.forEach(function(hole) {
-			swctx.addHole(hole);
-		});
-		swctx.addPoints(points);
+	var t0 = window.performance.now();
 
-		// triangulate
-		swctx.triangulate();*/
+	tess = Tess2.tesselate({
+		contours: contours,
+		windingRule: Tess2.WINDING_ODD,
+		elementType: Tess2.POLYGONS,
+		polySize: 3,
+		vertexSize: 2,
+		normal: [0,0,1]
+	});
 
-		tess = new Tesselator();
+	var t1 = window.performance.now();
 
-		for (var i = 0; i < contours.length; i++) {
-			tess.addContour(2, contours[i]);
-		}
-		tess.tesselate(WINDING_ODD, POLYGONS, 3, 2, [0,0,1]);
-
-/*	} catch (e) {
-		window.console.error(e);
-	}*/
-	triangles = /*swctx.getTriangles() ||*/ [];
-	$("#triangles_size").text(triangles.length);
+	$("#tess_time").text((t1-t0).toFixed(4));
+	$("#triangles_size").text(tess.elementCount);
 }
 
 function draw() {
