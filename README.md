@@ -30,7 +30,7 @@ for (var i = 0; i < res.elements.length; i += 3) {
 		res.vertices[b*2], res.vertices[b*2+1],
 		res.vertices[c*2], res.vertices[c*2+1]);
 }
-``
+```
 
 Further reading:
 http://www.glprogramming.com/red/chapter11.html
