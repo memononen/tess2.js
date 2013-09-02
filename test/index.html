@@ -60,6 +60,7 @@
 	<body>
 	    <div id="control">
 	        <form>
+	        	<h2>Tess2.js demo</h2>
 	            <div class="wrapper">
 	                <label for="preset">Load preset data:</label>
 	                <select id="preset"></select>
@@ -80,12 +81,42 @@
 	                <label for="poly_contours">Contours (at least one blank line between each hole):</label>
 	                <textarea id="poly_contours" rows="5" cols="50"></textarea>
 	                <span class="info">(<span id="contours_size">0</span> contours and <span id="contours_points">0</span> points parsed)</span>
+	                <input id="btnTriangulate" type="button" value="Update">
 	            </div>
 
 	            <div class="wrapper">
-	                <input id="btnTriangulate" type="button" value="Update">
-	                <br><span class="info">(<span id="triangles_size">0</span> triangles computed)</span>
-	                <br><span class="info">(build in <span id="tess_time">0</span> ms)</span>
+	                <label for="winding_rule">Winding rule:</label>
+	                <select id="winding_rule">
+	                	<option value="odd">WINDING_ODD</option>
+	                	<option value="nonzero">WINDING_NONZERO</option>
+	                	<option value="positive">WINDING_POSITIVE</option>
+	                	<option value="negative">WINDING_NEGATIVE</option>
+	                	<option value="absgeqtwo">WINDING_ABS_GEQ_TWO</option>
+	                </select>
+	                <br/>
+
+	                <label for="element_type">Element type:</label>
+	                <select id="element_type">
+	                	<option value="polygons">POLYGONS</option>
+	                	<option value="connected_polygons">CONNECTED_POLYGONS</option>
+	                	<option value="boundary_contours">BOUNDARY_CONTOURS</option>
+	                </select>
+	                <br/>
+
+	                <label for="polygon_size">Polygon size:</label>
+	                <select id="polygon_size">
+	                	<option value="3">3</option>
+	                	<option value="4">4</option>
+	                	<option value="6">6</option>
+	                	<option value="10">10</option>
+	                	<option value="16">16</option>
+	                </select>
+	                <br/>
+	            </div>
+
+	            <div class="wrapper">
+	                <br><span class="info"><span id="triangles_size">0</span> triangles computed.</span>
+	                <br><span class="info">Build in <span id="tess_time">0</span> ms</span>
 	            </div>
 
 <!--	            <div class="wrapper">

@@ -805,7 +805,7 @@
 			var vStart;
 			var curNv, symNv;
 
-			for( f = mesh.fHead.next; f !== mesh.fHead; f = f.next )
+			for( f = this.fHead.next; f !== this.fHead; f = f.next )
 			{
 				// Skip faces which are outside the result.
 				if( !f.inside )
@@ -825,7 +825,7 @@
 						// Try to merge the neighbour faces if the resulting polygons
 						// does not exceed maximum number of vertices.
 						curNv = this.countFaceVerts_( f );
-						symNv = this.cCountFaceVerts_( eSym.Lface );
+						symNv = this.countFaceVerts_( eSym.Lface );
 						if( (curNv+symNv-2) <= maxVertsPerFace )
 						{
 							// Merge if the resulting poly is convex.
@@ -833,8 +833,9 @@
 								Geom.vertCCW( eSym.Lprev.Org, eSym.Org, eCur.Lnext.Lnext.Org ) )
 							{
 								eNext = eSym.Lnext;
-								mesh.delete( eSym );
+								this.delete( eSym );
 								eCur = null;
+								eSym = null;
 							}
 						}
 					}
@@ -1084,7 +1085,7 @@
 		* bounding rectangles defined by each edge.
 		*/
 		var z1, z2;
-		var swap = function(a,b) { var t = a; a = b; b = t; };
+		var t;
 
 		/* This is certainly not the most efficient way to find the intersection
 		* of two line segments, but it is very numerically stable.
@@ -1094,9 +1095,9 @@
 		* using the TransLeq ordering to find the intersection t-value.
 		*/
 
-		if( ! Geom.vertLeq( o1, d1 )) { swap( o1, d1 ); }
-		if( ! Geom.vertLeq( o2, d2 )) { swap( o2, d2 ); }
-		if( ! Geom.vertLeq( o1, o2 )) { swap( o1, o2 ); swap( d1, d2 ); }
+		if( ! Geom.vertLeq( o1, d1 )) { t = o1; o1 = d1; d1 = t; } //swap( o1, d1 ); }
+		if( ! Geom.vertLeq( o2, d2 )) { t = o2; o2 = d2; d2 = t; } //swap( o2, d2 ); }
+		if( ! Geom.vertLeq( o1, o2 )) { t = o1; o1 = o2; o2 = t; t = d1; d1 = d2; d2 = t; }//swap( o1, o2 ); swap( d1, d2 ); }
 
 		if( ! Geom.vertLeq( o2, d1 )) {
 			/* Technically, no intersection -- do our best */
@@ -1117,9 +1118,9 @@
 
 		/* Now repeat the process for t */
 
-		if( ! Geom.transLeq( o1, d1 )) { swap( o1, d1 ); }
-		if( ! Geom.transLeq( o2, d2 )) { swap( o2, d2 ); }
-		if( ! Geom.transLeq( o1, o2 )) { swap( o1, o2 ); swap( d1, d2 ); }
+		if( ! Geom.transLeq( o1, d1 )) { t = o1; o1 = d1; d1 = t; } //swap( o1, d1 ); }
+		if( ! Geom.transLeq( o2, d2 )) { t = o2; o2 = d2; d2 = t; } //swap( o2, d2 ); }
+		if( ! Geom.transLeq( o1, o2 )) { t = o1; o1 = o2; o2 = t; t = d1; d1 = d2; d2 = t; } //swap( o1, o2 ); swap( d1, d2 ); }
 
 		if( ! Geom.transLeq( o2, d1 )) {
 			/* Technically, no intersection -- do our best */
@@ -1138,8 +1139,6 @@
 			v.t = Geom.interpolate( z1, o2.t, z2, d2.t );
 		}
 	};
-
-
 
 
 
@@ -1375,7 +1374,7 @@
 			assert( hCurr >= 1 && hCurr <= this.max && h[hCurr].key !== null );
 
 			curr = h[hCurr].node;
-			n[curr].handle = n[pq.size].handle;
+			n[curr].handle = n[this.size].handle;
 			h[n[curr].handle].node = curr;
 
 			--this.size;
@@ -2251,7 +2250,7 @@
 
 		if( ! Geom.vertEq( e.Dst, vEvent )) {
 			/* General case -- splice vEvent into edge e which passes through it */
-			tess.mesh.spliceEdge( e.Sym );
+			tess.mesh.splitEdge( e.Sym );
 			if( regUp.fixUpperEdge ) {
 				/* This edge was fixable -- delete unused portion of original edge */
 				tess.mesh.delete( e.Onext );
@@ -3040,9 +3039,9 @@
 		*/
 	//	int tessMeshSetWindingNumber( TESSmesh *mesh, int value, int keepOnlyBoundary )
 		setWindingNumber_: function( mesh, value, keepOnlyBoundary ) {
-			var e, Next;
+			var e, eNext;
 
-			for( e = mesh.eHead.next; e !== mesh.eHead; e == eNext ) {
+			for( e = mesh.eHead.next; e !== mesh.eHead; e = eNext ) {
 				eNext = e.next;
 				if( e.Rface.inside !== e.Lface.inside ) {
 
@@ -3054,11 +3053,10 @@
 					if( ! keepOnlyBoundary ) {
 						e.winding = 0;
 					} else {
-						if ( !mesh.delete( e ) ) return false;
+						mesh.delete( e );
 					}
 				}
 			}
-			return true;
 		},
 
 		getNeighbourFace_: function(edge)
@@ -3283,14 +3281,14 @@
 					this.vertices[nv++] = edge.Org.coords[1];
 					if ( vertexSize > 2 )
 						this.vertices[nv++] = edge.Org.coords[2];
-					this.vertices[nvi++] = edge.Org.idx;
+					this.vertexIndices[nvi++] = edge.Org.idx;
 					vertCount++;
 					edge = edge.Lnext;
 				}
 				while ( edge !== start );
 
-				elements[nel++] = startVert;
-				elements[nel++] = vertCount;
+				this.elements[nel++] = startVert;
+				this.elements[nel++] = vertCount;
 
 				startVert += vertCount;
 			}

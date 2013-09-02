@@ -96,5 +96,12 @@
         "files": [
             {"name": "spiral.dat", "content": "Spiral", "triangles": 13}
         ]
-    }
-]
+    },
+    {
+        "title": "GLU examples",
+        "dateupdated": "2013-09-02",
+        "files": [
+            {"name": "glu_example.dat", "content": "GLU example"},
+            {"name": "glu_winding.dat", "content": "GLU winding"}
+        ]
+    }]
