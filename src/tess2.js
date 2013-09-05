@@ -53,7 +53,7 @@
 		var debug =  opts.debug || false;
 		var tess = new Tesselator();
 		for (var i = 0; i < opts.contours.length; i++) {
-			tess.addContour(opts.vertexSize || 2, contours[i]);
+			tess.addContour(opts.vertexSize || 2, opts.contours[i]);
 		}
 		tess.tesselate(opts.windingRule || Tess2.WINDING_ODD,
 					   opts.elementType || Tess2.POLYGONS,
@@ -3425,4 +3425,4 @@
 		}
 	};
 
-}(this));
+}((typeof(window) === 'undefined') ? module.exports : window));
