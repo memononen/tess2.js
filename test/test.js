@@ -192,7 +192,7 @@ function draw() {
 	ctx.lineWidth = linescale;
 //	ctx.fillStyle = TRIANGLE_FILL_STYLE;
 //	ctx.strokeStyle = TRIANGLE_STROKE_STYLE;
-	ctx.setLineDash(null);
+	ctx.setLineDash([]);
 
 
 	if (tess !== null) {
@@ -315,7 +315,7 @@ function draw() {
 		ctx.lineTo(bounds[0], bounds[3]);
 		ctx.lineTo(bounds[0], bounds[1]);
 		ctx.stroke();
-		ctx.setLineDash(null);
+		ctx.setLineDash([]);
 
 		ctx.beginPath();
 		ctx.moveTo(cx-linescale*10, cy);
