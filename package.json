@@ -1,6 +1,6 @@
 {
   "name": "tess2",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "GLU tesselator ported to Javascript, performs polygon boolean operations and triangulation",
   "main": "index.js",
   "directories": {
