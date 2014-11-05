@@ -1,0 +1,36 @@
+{
+  "name": "tess2",
+  "version": "1.0.0",
+  "description": "GLU tesselator ported to Javascript, performs polygon boolean operations and triangulation",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "browserify index.js -o build/tess2.js -s Tess2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/memononen/tess2.js.git"
+  },
+  "keywords": [
+    "tesselate",
+    "tesselation",
+    "triangulate",
+    "triangulation",
+    "glu",
+    "webgl",
+    "triangles",
+    "tess",
+    "opengl",
+    "polygons",
+    "contour"
+  ],
+  "author": "Matt DesLauriers <dave.des@gmail.com>",
+  "license": "SGI-B-2.0",
+  "bugs": {
+    "url": "https://github.com/memononen/tess2.js/issues"
+  },
+  "homepage": "https://github.com/memononen/tess2.js"
+}
