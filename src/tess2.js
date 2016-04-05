@@ -35,6 +35,7 @@
 	/* Public API */
 
 	var Tess2 = {};
+	var Geom = {};
 
 	module.exports = Tess2;
 	
@@ -907,8 +908,6 @@
 
 	};
 
-	var Geom = {};
-
 	Geom.vertEq = function(u,v) {
 		return (u.s === v.s && u.t === v.t);
 	};
@@ -1053,7 +1052,7 @@
 	* even when a and b differ greatly in magnitude.
 	*/
 	Geom.interpolate = function(a,x,b,y) {
-		return (a = (a < 0) ? 0 : a, b = (b < 0) ? 0 : b, ((a <= b) ? ((b == 0) ? ((x+y) / 2) : (x + (y-x) * (a/(a+b)))) : (y + (x-y) * (b/(a+b)))));
+		return (a = (a < 0) ? 0 : a, b = (b < 0) ? 0 : b, ((a <= b) ? ((b === 0) ? ((x+y) / 2) : (x + (y-x) * (a/(a+b)))) : (y + (x-y) * (b/(a+b)))));
 	};
 
 	/*
@@ -1218,12 +1217,14 @@
 
 		this.nodes = [];
 		this.nodes.length = size+1;
-		for (var i = 0; i < this.nodes.length; i++)
+		var i;
+		
+		for (i = 0; i < this.nodes.length; i++)
 			this.nodes[i] = new PQnode();
 
 		this.handles = [];
 		this.handles.length = size+1;
-		for (var i = 0; i < this.handles.length; i++)
+		for (i = 0; i < this.handles.length; i++)
 			this.handles[i] = new PQhandleElem();
 
 		this.initialized = false;
@@ -1275,7 +1276,7 @@
 			for( ;; ) {
 				parent = curr >> 1;
 				hParent = n[parent].handle;
-				if( parent == 0 || this.leq( h[hParent].key, h[hCurr].key )) {
+				if( parent === 0 || this.leq( h[hParent].key, h[hCurr].key )) {
 					n[curr].handle = hCurr;
 					h[hCurr].node = curr;
 					break;
@@ -1298,10 +1299,6 @@
 			return this.handles[this.nodes[1].handle].key;
 		},
 
-		isEmpty: function() {
-			this.size === 0;
-		},
-
 		/* really pqHeapInsert */
 		/* returns INV_HANDLE iff out of memory */
 		//PQhandle pqHeapInsert( TESSalloc* alloc, PriorityQHeap *pq, PQkey keyNew )
@@ -1313,15 +1310,16 @@
 			curr = ++this.size;
 			if( (curr*2) > this.max ) {
 				this.max *= 2;
+				var i;
 				var s;
 				s = this.nodes.length;
 				this.nodes.length = this.max+1;
-				for (var i = s; i < this.nodes.length; i++)
+				for (i = s; i < this.nodes.length; i++)
 					this.nodes[i] = new PQnode();
 
 				s = this.handles.length;
 				this.handles.length = this.max+1;
-				for (var i = s; i < this.handles.length; i++)
+				for (i = s; i < this.handles.length; i++)
 					this.handles[i] = new PQhandleElem();
 			}
 
@@ -1559,7 +1557,6 @@
 	Sweep.topRightRegion = function( reg )
 	{
 		var dst = reg.eUp.Dst;
-		var reg = null;
 		/* Find the region above the uppermost edge with the same destination */
 		do {
 			reg = Sweep.regionAbove( reg );
@@ -1591,9 +1588,9 @@
 	Sweep.isWindingInside = function( tess, n ) {
 		switch( tess.windingRule ) {
 			case Tess2.WINDING_ODD:
-				return (n & 1) != 0;
+				return (n & 1) !== 0;
 			case Tess2.WINDING_NONZERO:
-				return (n != 0);
+				return (n !== 0);
 			case Tess2.WINDING_POSITIVE:
 				return (n > 0);
 			case Tess2.WINDING_NEGATIVE:
@@ -2071,7 +2068,7 @@
 			if( ! regUp.dirty ) {
 				regLo = regUp;
 				regUp = Sweep.regionAbove( regUp );
-				if( regUp == null || ! regUp.dirty ) {
+				if( regUp === null || ! regUp.dirty ) {
 					/* We've walked all the dirty regions */
 					return;
 				}
@@ -2371,7 +2368,7 @@
 		var e = vEvent.anEdge;
 		while( e.activeRegion === null ) {
 			e = e.Onext;
-			if( e == vEvent.anEdge ) {
+			if( e === vEvent.anEdge ) {
 				/* All edges go right -- not incident to any processed edges */
 				Sweep.connectLeftVertex( tess, vEvent );
 				return;
@@ -2472,9 +2469,9 @@
 			*/
 			if( ! reg.sentinel ) {
 				assert( reg.fixUpperEdge );
-				assert( ++fixedEdges == 1 );
+				assert( ++fixedEdges === 1 );
 			}
-			assert( reg.windingNumber == 0 );
+			assert( reg.windingNumber === 0 );
 			Sweep.deleteRegion( tess, reg );
 			/*    tessMeshDelete( reg->eUp );*/
 		}
@@ -2964,7 +2961,7 @@
 					lo = lo.Lprev;
 				} else {
 					/* lo->Org is on the left.  We can make CCW triangles from up->Dst. */
-					while( lo.Lnext != up && (Geom.edgeGoesRight( up.Lprev )
+					while( lo.Lnext !== up && (Geom.edgeGoesRight( up.Lprev )
 						|| Geom.edgeSign( up.Dst, up.Org, up.Lprev.Org ) >= 0.0 )) {
 							var tempHalfEdge = mesh.connect( up, up.Lprev );
 							//if (tempHalfEdge == NULL) return 0;
@@ -3089,7 +3086,7 @@
 				v.n = -1;
 
 			// Create unique IDs for all vertices and faces.
-			for ( f = mesh.fHead.next; f != mesh.fHead; f = f.next )
+			for ( f = mesh.fHead.next; f !== mesh.fHead; f = f.next )
 			{
 				f.n = -1;
 				if( !f.inside ) continue;
@@ -3116,7 +3113,7 @@
 			}
 
 			this.elementCount = maxFaceCount;
-			if (elementType == Tess2.CONNECTED_POLYGONS)
+			if (elementType === Tess2.CONNECTED_POLYGONS)
 				maxFaceCount *= 2;
 	/*		tess.elements = (TESSindex*)tess->alloc.memalloc( tess->alloc.userData,
 															  sizeof(TESSindex) * maxFaceCount * polySize );
@@ -3153,7 +3150,7 @@
 			// Output vertices.
 			for ( v = mesh.vHead.next; v !== mesh.vHead; v = v.next )
 			{
-				if ( v.n != -1 )
+				if ( v.n !== -1 )
 				{
 					// Store coordinate
 					var idx = v.n * vertexSize;
@@ -3188,7 +3185,7 @@
 					this.elements[nel++] = -1;
 
 				// Store polygon connectivity
-				if ( elementType == Tess2.CONNECTED_POLYGONS )
+				if ( elementType === Tess2.CONNECTED_POLYGONS )
 				{
 					edge = f.anEdge;
 					do
@@ -3314,7 +3311,7 @@
 
 			for( i = 0; i < vertices.length; i += size )
 			{
-				if( e == null ) {
+				if( e === null ) {
 					/* Make a self-loop (one vertex, one edge). */
 					e = this.mesh.makeEdge();
 	/*				if ( e == NULL ) {
@@ -3401,7 +3398,7 @@
 			* except those which separate the interior from the exterior.
 			* Otherwise we tessellate all the regions marked "inside".
 			*/
-			if (elementType == Tess2.BOUNDARY_CONTOURS) {
+			if (elementType === Tess2.BOUNDARY_CONTOURS) {
 				this.setWindingNumber_( mesh, 1, true );
 			} else {
 				this.tessellateInterior_( mesh ); 
@@ -3410,7 +3407,7 @@
 
 			mesh.check();
 
-			if (elementType == Tess2.BOUNDARY_CONTOURS) {
+			if (elementType === Tess2.BOUNDARY_CONTOURS) {
 				this.outputContours_( mesh, vertexSize );     /* output contours */
 			}
 			else
