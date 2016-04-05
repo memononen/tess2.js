@@ -1996,7 +1996,7 @@
 				eUp = Sweep.regionBelow(regUp).eUp;
 				Sweep.finishLeftRegions( tess, Sweep.regionBelow(regUp), regLo );
 				Sweep.addRightEdges( tess, regUp, eUp.Oprev, eUp, eUp, true );
-				return TRUE;
+				return true;
 			}
 			if( dstUp === tess.event ) {
 				/* Splice dstUp into eLo, and process the new region(s) */
