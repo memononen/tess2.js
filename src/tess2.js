@@ -36,8 +36,10 @@
 
 	var Tess2 = {};
 	var Geom = {};
-
+	if (typeof module === 'object'){
 	module.exports = Tess2;
+	}
+
 	
 	Tess2.WINDING_ODD = 0;
 	Tess2.WINDING_NONZERO = 1;
